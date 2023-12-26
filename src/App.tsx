@@ -18,17 +18,18 @@ import {
   MicOff24Regular,
   Pause24Regular,
   Settings24Regular,
+  ShareScreenStart24Regular,
   Warning24Regular,
 } from "@fluentui/react-icons";
 
 type ActionBarButtons = {
   // https://webrtc.github.io/samples/src/content/getusermedia/getdisplaymedia/
   screenSharing: boolean;
-
   messages: boolean;
   fastClose: boolean;
   pause: boolean;
   mute: boolean;
+  report: boolean;
 };
 
 type MessagesSettings = {
@@ -84,6 +85,7 @@ const DEFAULT_STORAGE: UserStorage = {
     fastClose: false,
     pause: false,
     mute: false,
+    report: true,
   },
   rtc: {
     audioInput: null,
@@ -173,18 +175,24 @@ const App = () => {
         </div>
         <div className="mid"></div>
         <div className="right">
-          <Button
+          {storage.button.report && <Button
             shape="circular"
             icon={<Warning24Regular />}
             className="btn"
-          />
+          />}
           {storage.button.messages && <Button
             shape="circular"
             icon={<Chat24Regular />}
             onClick={() => setChatOpen(() => !isChatOpen)}
             className="btn"
           />}
-          <Divider vertical />
+          {storage.button.screenSharing && <Button
+            shape="circular"
+            icon={<ShareScreenStart24Regular />}
+            className="btn"
+          />}
+        
+          {(storage.button.messages || storage.button.report) && <Divider vertical />}
           <Button
             shape="circular"
             icon={<ArrowRight24Regular />}
