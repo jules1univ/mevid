@@ -33,10 +33,12 @@ type MessagesDrawerProps = {
   open: boolean;
   setOpen: (open: boolean) => void;
   messages?: MessageData[];
+  rightSide: boolean;
 };
 
 const MessagesDrawer: FC<MessagesDrawerProps> = ({
   messages,
+  rightSide,
   open,
   setOpen,
 }) => {
@@ -46,7 +48,7 @@ const MessagesDrawer: FC<MessagesDrawerProps> = ({
       separator
       open={open}
       size="small"
-      position="start"
+      position={rightSide ? "end" : "start"}
       onOpenChange={(_, { open }) => setOpen(open)}
     >
       <DrawerHeader>

@@ -40,7 +40,7 @@ const App = () => {
     switch(storage.user.theme)
     {
       case "auto":
-        return new Date().getHours() > 18 ? teamsDarkTheme : teamsLightTheme;
+        return (new Date().getHours() >= 18 ? teamsDarkTheme : teamsLightTheme);
       case "dark":
         return teamsDarkTheme;
       case "light":
@@ -125,7 +125,7 @@ const App = () => {
       </div>
       <Suspense>
         {storage.button.messages && (
-          <MessagesDrawer open={isChatOpen} setOpen={setChatOpen} />
+          <MessagesDrawer open={isChatOpen} rightSide={storage.message.rightDirection} setOpen={setChatOpen} />
         )}
         <SettingsModal open={isSettingsOpen} setOpen={setSettingsOpen} storage={storage} setStorage={setStorage}  />
       </Suspense>

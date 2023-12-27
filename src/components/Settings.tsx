@@ -19,7 +19,7 @@ import {
   Delete24Regular,
   Save24Regular,
 } from "@fluentui/react-icons";
-import { FC } from "react";
+import { FC, useEffect, useState } from "react";
 import { UserStorage } from "../storage.user";
 
 type SettingsModalProps = {
@@ -33,6 +33,18 @@ type SettingsModalProps = {
 type SettingSectionProps = {
   title: string;
   content: JSX.Element;
+};
+
+type Devices = {
+  audioIn: string[];
+  videoIn: string[];
+  audioOut: string[];
+  error: boolean;
+};
+
+type Codecs = {
+  audio: string[];
+  video: string[];
 };
 
 const SettingSection: FC<SettingSectionProps> = ({ title, content }) => {
@@ -49,12 +61,81 @@ const SettingsModal: FC<SettingsModalProps> = ({
   storage,
   setStorage,
 }) => {
+  const [devices, setDevices] = useState<Devices>({
+    audioIn: [],
+    videoIn: [],
+    audioOut: [],
+    error: false,
+  });
+  const [codecs, setCodecs] = useState<Codecs>({
+    audio: [],
+    video: [],
+  });
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    let codecsCp: Codecs = { video: [], audio: [] };
+
+    const videoCapabilities = RTCRtpReceiver.getCapabilities("video");
+    if (videoCapabilities?.codecs) {
+      codecsCp.video = videoCapabilities.codecs.map(
+        (codec) => codec.mimeType + " " + (codec.sdpFmtpLine || "")
+      );
+    }
+    const audioCapabilities = RTCRtpReceiver.getCapabilities("audio");
+    if (audioCapabilities?.codecs) {
+      codecsCp.audio = audioCapabilities.codecs.map(
+        (codec) => codec.mimeType + " " + (codec.sdpFmtpLine || "")
+      );
+    }
+    setCodecs(codecsCp);
+
+    navigator.mediaDevices
+      .enumerateDevices()
+      .then((allDevices) => {
+        const audioInDevices = allDevices
+          .filter((device) => device.kind === "audioinput")
+          .map((audioDevice) =>
+            audioDevice.label.length === 0 ? "Default" : audioDevice.label
+          );
+        const videoInDevices = allDevices
+          .filter((device) => device.kind === "videoinput")
+          .map((videoDevice) =>
+            videoDevice.label.length === 0 ? "Default" : videoDevice.label
+          );
+
+        const audioOutDevices = allDevices
+          .filter((device) => device.kind === "audiooutput")
+          .map((audioOutDevice) =>
+            audioOutDevice.label.length === 0 ? "Default" : audioOutDevice.label
+          );
+
+        setDevices({
+          audioIn: audioInDevices,
+          videoIn: videoInDevices,
+          audioOut: audioOutDevices,
+          error: false,
+        });
+      })
+      .catch(() => {
+        setDevices({
+          audioIn: [],
+          videoIn: [],
+          audioOut: [],
+          error: true,
+        });
+      });
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={(_, { open }) => setOpen(open)}>
       <DialogSurface>
         <DialogBody>
           <DialogTitle>Settings</DialogTitle>
-          <DialogContent>
+          <DialogContent className="setting-content">
             <SettingSection
               title="Preferences"
               content={
@@ -62,57 +143,67 @@ const SettingsModal: FC<SettingsModalProps> = ({
                   <div className="setting-item">
                     <div className="setting-line">
                       <p>Theme</p>
-                      <Select
-                        style={{ width: "50%" }}
-                        onChange={(e) =>
-                          setStorage({
-                            ...storage,
-                            user: {
-                              ...storage.user,
-                              theme: e.target
-                                .value as typeof storage.user.theme,
-                            },
-                          })
-                        }
-                      >
-                        <option value="auto">Auto</option>
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
-                        <option value="hightcontrast">Hightcontrast</option>
-                      </Select>
+                      <div className="second">
+                        <Select
+                          value={
+                            storage.user.theme[0].toUpperCase() +
+                            storage.user.theme.slice(1)
+                          }
+                          onChange={(e) =>
+                            setStorage({
+                              ...storage,
+                              user: {
+                                ...storage.user,
+                                theme:
+                                  e.target.value.toLowerCase() as typeof storage.user.theme,
+                              },
+                            })
+                          }
+                          className="maxw"
+                        >
+                          <option>Auto</option>
+                          <option>Light</option>
+                          <option>Dark</option>
+                          <option>Hightcontrast</option>
+                        </Select>
+                      </div>
                     </div>
                     <div className="setting-line">
                       <p>Username</p>
-                      <Input
-                        style={{ width: "50%" }}
-                        value={storage.user.username || ""}
-                        onChange={(e) =>
-                          setStorage({
-                            ...storage,
-                            user: {
-                              ...storage.user,
-                              username: e.target.value.trim(),
-                            },
-                          })
-                        }
-                      />
+                      <div className="second">
+                        <Input
+                          value={storage.user.username || ""}
+                          onChange={(e) =>
+                            setStorage({
+                              ...storage,
+                              user: {
+                                ...storage.user,
+                                username: e.target.value.trim(),
+                              },
+                            })
+                          }
+                          className="maxw"
+                        />
+                      </div>
                     </div>
 
                     <div className="setting-line">
                       <p>Avatar (URL)</p>
-                      <Input
-                        style={{ width: "50%" }}
-                        value={storage.user.avatarUrl || ""}
-                        onChange={(e) =>
-                          setStorage({
-                            ...storage,
-                            user: {
-                              ...storage.user,
-                              avatarUrl: e.target.value.trim(),
-                            },
-                          })
-                        }
-                      />
+                      <div className="second">
+                        <Input
+                          value={storage.user.avatarUrl || ""}
+                          onChange={(e) =>
+                            setStorage({
+                              ...storage,
+                              user: {
+                                ...storage.user,
+                                avatarUrl: e.target.value.trim(),
+                              },
+                            })
+                          }
+                          className="maxw"
+                        />
+                      </div>
                     </div>
                   </div>
                 </>
@@ -125,96 +216,108 @@ const SettingsModal: FC<SettingsModalProps> = ({
                   <div className="setting-item">
                     <div className="setting-line">
                       <p>Messages</p>
-                      <Switch
-                        defaultChecked={storage.button.messages}
-                        onChange={(e) =>
-                          setStorage({
-                            ...storage,
-                            button: {
-                              ...storage.button,
-                              messages: e.target.checked,
-                            },
-                          })
-                        }
-                      />
+                      <div className="second">
+                        <Switch
+                          defaultChecked={storage.button.messages}
+                          onChange={(e) =>
+                            setStorage({
+                              ...storage,
+                              button: {
+                                ...storage.button,
+                                messages: e.target.checked,
+                              },
+                            })
+                          }
+                        />
+                      </div>
                     </div>
                     <div className="setting-line">
                       <p>Report</p>
-                      <Switch
-                        defaultChecked={storage.button.report}
-                        onChange={(e) =>
-                          setStorage({
-                            ...storage,
-                            button: {
-                              ...storage.button,
-                              report: e.target.checked,
-                            },
-                          })
-                        }
-                      />
+                      <div className="second">
+                        <Switch
+                          defaultChecked={storage.button.report}
+                          onChange={(e) =>
+                            setStorage({
+                              ...storage,
+                              button: {
+                                ...storage.button,
+                                report: e.target.checked,
+                              },
+                            })
+                          }
+                        />
+                      </div>
                     </div>
 
                     <div className="setting-line">
                       <p>Screen Sharing</p>
-                      <Switch
-                        defaultChecked={storage.button.screenSharing}
-                        onChange={(e) =>
-                          setStorage({
-                            ...storage,
-                            button: {
-                              ...storage.button,
-                              screenSharing: e.target.checked,
-                            },
-                          })
-                        }
-                      />
+                      <div className="second">
+                        <Switch
+                          defaultChecked={storage.button.screenSharing}
+                          onChange={(e) =>
+                            setStorage({
+                              ...storage,
+                              button: {
+                                ...storage.button,
+                                screenSharing: e.target.checked,
+                              },
+                            })
+                          }
+                        />
+                      </div>
                     </div>
                     <Divider style={{ margin: "20px 0px" }}>Left side</Divider>
 
                     <div className="setting-line">
                       <p>Mute</p>
-                      <Switch
-                        defaultChecked={storage.button.mute}
-                        onChange={(e) =>
-                          setStorage({
-                            ...storage,
-                            button: {
-                              ...storage.button,
-                              mute: e.target.checked,
-                            },
-                          })
-                        }
-                      />
+                      <div className="second">
+                        <Switch
+                          defaultChecked={storage.button.mute}
+                          onChange={(e) =>
+                            setStorage({
+                              ...storage,
+                              button: {
+                                ...storage.button,
+                                mute: e.target.checked,
+                              },
+                            })
+                          }
+                        />
+                      </div>
                     </div>
                     <div className="setting-line">
                       <p>Pause</p>
-                      <Switch
-                        defaultChecked={storage.button.pause}
-                        onChange={(e) =>
-                          setStorage({
-                            ...storage,
-                            button: {
-                              ...storage.button,
-                              pause: e.target.checked,
-                            },
-                          })
-                        }
-                      />
+                      <div className="second">
+                        <Switch
+                          defaultChecked={storage.button.pause}
+                          onChange={(e) =>
+                            setStorage({
+                              ...storage,
+                              button: {
+                                ...storage.button,
+                                pause: e.target.checked,
+                              },
+                            })
+                          }
+                        />
+                      </div>
                     </div>
                     <div className="setting-line">
                       <p>Close</p>
-                      <Switch
-                        defaultChecked={storage.button.fastClose}
-                        onChange={(e) =>
-                          setStorage({
-                            ...storage,
-                            button: {
-                              ...storage.button,
-                              fastClose: e.target.checked,
-                            },
-                          })
-                        }
-                      />
+                      <div className="second">
+                        <Switch
+                          defaultChecked={storage.button.fastClose}
+                          onChange={(e) =>
+                            setStorage({
+                              ...storage,
+                              button: {
+                                ...storage.button,
+                                fastClose: e.target.checked,
+                              },
+                            })
+                          }
+                        />
+                      </div>
                     </div>
                   </div>
                 </>
@@ -227,22 +330,66 @@ const SettingsModal: FC<SettingsModalProps> = ({
                   <div className="setting-item">
                     <div className="setting-line">
                       <p>Right side</p>
-                      <Switch />
+                      <div className="second">
+                        <Switch
+                          defaultChecked={storage.message.rightDirection}
+                          onChange={(e) =>
+                            setStorage({
+                              ...storage,
+                              message: {
+                                ...storage.message,
+                                rightDirection: e.target.checked,
+                              },
+                            })
+                          }
+                        />
+                      </div>
                     </div>
                     <div className="setting-line">
                       <p>Image preview</p>
-                      <Switch />
+                      <div className="second">
+                        <Switch
+                          defaultChecked={storage.message.imagePreview}
+                          onChange={(e) =>
+                            setStorage({
+                              ...storage,
+                              message: {
+                                ...storage.message,
+                                imagePreview: e.target.checked,
+                              },
+                            })
+                          }
+                        />
+                      </div>
                     </div>
                     <div className="setting-line">
                       <p>File sending</p>
-                      <Switch />
+                      <div className="second">
+                        <Switch
+                          defaultChecked={storage.message.imagePreview}
+                          onChange={(e) =>
+                            setStorage({
+                              ...storage,
+                              message: {
+                                ...storage.message,
+                                imagePreview: e.target.checked,
+                              },
+                            })
+                          }
+                        />
+                      </div>
                     </div>
 
                     <div className="setting-line">
                       <p>Word filter</p>
-                      <div className="setting-line" style={{ width: "50%" }}>
-                        <Select style={{ width: "100%" }}></Select>
-                        <Button icon={<Add24Regular />} />
+                      <div className="second">
+                        <div className="setting-line">
+                          <Select
+                            style={{ width: "100%" }}
+                            className="maxw"
+                          ></Select>
+                          <Button icon={<Add24Regular />} />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -256,38 +403,104 @@ const SettingsModal: FC<SettingsModalProps> = ({
                   <div className="setting-item">
                     <div className="setting-line">
                       <p>Video (Input)</p>
-                      <Select style={{ width: "50%" }}></Select>
+                      <div className="second">
+                        <Select disabled={devices.error} className="maxw">
+                          {devices.videoIn.map((item) => (
+                            <option key={item}>{item}</option>
+                          ))}
+                        </Select>
+                      </div>
                     </div>
                     <div className="setting-line">
                       <p>Audio (Input)</p>
-                      <Select style={{ width: "50%" }}></Select>
+                      <div className="second">
+                        <Select disabled={devices.error} className="maxw">
+                          {devices.audioIn.map((item) => (
+                            <option key={item}>{item}</option>
+                          ))}
+                        </Select>
+                      </div>
                     </div>
                     <div className="setting-line">
                       <p>Audio (Output)</p>
-                      <Select style={{ width: "50%" }}></Select>
+                      <div className="second">
+                        <Select disabled={devices.error} className="maxw">
+                          {devices.audioOut.map((item) => (
+                            <option key={item}>{item}</option>
+                          ))}
+                        </Select>
+                      </div>
                     </div>
                     <Divider style={{ margin: "20px 0px" }}>Advanced</Divider>
                     <div className="setting-line">
                       <p>Video Codec</p>
-                      <Select style={{ width: "50%" }}></Select>
+                      <div className="second">
+                        <Select className="maxw">
+                          {codecs.video.map((item) => (
+                            <option key={item}>{item}</option>
+                          ))}
+                        </Select>
+                      </div>
                     </div>
                     <div className="setting-line">
-                      <p>Scalability Mode</p>
-                      <Select style={{ width: "50%" }}></Select>
+                      <p>Audio Codec</p>
+                      <div className="second">
+                        <Select className="maxw">
+                          {codecs.audio.map((item) => (
+                            <option key={item}>{item}</option>
+                          ))}
+                        </Select>
+                      </div>
                     </div>
                     <div className="setting-line">
                       <p>Bandwidth</p>
-                      <Input style={{ width: "50%" }} />
+                      <div className="second">
+                        <Input
+                          type="number"
+                          value={storage.rtc.bandwidth?.toString()}
+                          onChange={(e) =>
+                            setStorage({
+                              ...storage,
+                              rtc: {
+                                ...storage.rtc,
+                                bandwidth: e.target.valueAsNumber,
+                              },
+                            })
+                          }
+                          className="maxw"
+                        />
+                      </div>
                     </div>
                     <div className="setting-line">
                       <p>Recording duration (s)</p>
-                      <Input style={{ width: "50%" }} />
+
+                      <div className="second">
+                        <Input
+                          type="number"
+                          value={storage.rtc.redordingDuration?.toString()}
+                          onChange={(e) =>
+                            setStorage({
+                              ...storage,
+                              rtc: {
+                                ...storage.rtc,
+                                redordingDuration: e.target.valueAsNumber,
+                              },
+                            })
+                          }
+                          className="maxw"
+                        />
+                      </div>
                     </div>
                     <div className="setting-line">
                       <p>Ban list (IP)</p>
-                      <div className="setting-line" style={{ width: "50%" }}>
-                        <Select style={{ width: "100%" }}></Select>
-                        <Button icon={<Delete24Regular />} />
+                      <div className="second">
+                        <div className="setting-line">
+                          <Select
+                            style={{ width: "100%" }}
+                            className="maxw"
+                          ></Select>
+                          <Button icon={<Delete24Regular />} />
+                        </div>
                       </div>
                     </div>
                   </div>

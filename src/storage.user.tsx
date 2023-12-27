@@ -26,7 +26,7 @@ type RTCSettings = {
 
   // https://webrtc.github.io/samples/src/content/extensions/svc/
   videoCodec: string | null;
-  scalibilityMode: string | null;
+  audioCodec: string | null;
 
   // https://webrtc.github.io/samples/src/content/peerconnection/bandwidth/
   bandwidth: number | null;
@@ -67,7 +67,7 @@ export const DEFAULT_STORAGE: UserStorage = {
     audioOutput: null,
     videoInput: null,
     videoCodec: null,
-    scalibilityMode: null,
+    audioCodec: null,
     bandwidth: null,
     redordingDuration: 30,
     bannedIPs: [],
