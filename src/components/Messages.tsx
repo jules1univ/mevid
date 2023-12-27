@@ -10,10 +10,7 @@ import {
   Input,
   Persona,
 } from "@fluentui/react-components";
-import {
-  Dismiss24Regular,
-  Send16Regular,
-} from "@fluentui/react-icons";
+import { Dismiss24Regular, Send16Regular } from "@fluentui/react-icons";
 import { FC } from "react";
 
 type MessageData = {
@@ -83,14 +80,13 @@ const MessagesDrawer: FC<MessagesDrawerProps> = ({
               ))}
           </div>
           <div className="chat-input">
-            <Input />
+            <Input size="large" />
             <Button
               appearance="primary"
               iconPosition="after"
               icon={<Send16Regular />}
-            >
-              Send
-            </Button>
+              size="large"
+            />
           </div>
         </div>
       </DrawerBody>

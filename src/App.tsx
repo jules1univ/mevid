@@ -4,8 +4,9 @@ import {
   FluentProvider,
   Theme,
   tokens,
-  webDarkTheme,
-  webLightTheme,
+  teamsDarkTheme,
+  teamsLightTheme,
+  teamsHighContrastTheme,
 } from "@fluentui/react-components";
 import { Suspense, lazy, useMemo, useState } from "react";
 import { useStorage } from "./hooks/useStorage";
@@ -62,10 +63,9 @@ type RTCSettings = {
 };
 
 type UserPreferences = {
-  theme: "light" | "dark" | "auto";
+  theme: "light" | "dark" | "hightcontrast" | "auto";
   username: string | null;
   avatarUrl: string | null;
-  language: string | null;
 };
 
 type UserStorage = {
@@ -107,7 +107,6 @@ const DEFAULT_STORAGE: UserStorage = {
     theme: "auto",
     username: null,
     avatarUrl: null,
-    language: null,
   },
 };
 
@@ -123,10 +122,17 @@ const App = () => {
   const [isSettingsOpen, setSettingsOpen] = useState<boolean>(false);
 
   const theme: Theme = useMemo(() => {
-    if (storage.user.theme === "auto") {
-      return new Date().getHours() > 18 ? webDarkTheme : webLightTheme;
+    switch(storage.user.theme)
+    {
+      case "auto":
+        return new Date().getHours() > 18 ? teamsDarkTheme : teamsLightTheme;
+      case "dark":
+        return teamsDarkTheme;
+      case "light":
+        return teamsLightTheme;
+      case "hightcontrast":
+        return teamsHighContrastTheme;
     }
-    return storage.user.theme === "dark" ? webDarkTheme : webLightTheme;
   }, [storage]);
 
   return (
@@ -154,55 +160,58 @@ const App = () => {
           <Button
             shape="circular"
             icon={<Settings24Regular />}
-            className="btn"
+            size="large"
+            onClick={() => setSettingsOpen(true)}
           />
-          {(storage.button.fastClose || storage.button.pause || storage.button.mute) && <Divider vertical />}
-          {storage.button.fastClose && <Button
-            shape="circular"
-            icon={<Dismiss24Filled />}
-            className="btn"
-          />}
-          {storage.button.pause && <Button
-            shape="circular"
-            icon={<Pause24Regular />}
-            className="btn"
-          />}
-          {storage.button.mute && <Button
-            shape="circular"
-            icon={<MicOff24Regular />}
-            className="btn"
-          />}
+          {(storage.button.fastClose ||
+            storage.button.pause ||
+            storage.button.mute) && <Divider vertical />}
+          {storage.button.fastClose && (
+            <Button shape="circular" icon={<Dismiss24Filled />} size="large" />
+          )}
+          {storage.button.pause && (
+            <Button shape="circular" icon={<Pause24Regular />} size="large" />
+          )}
+          {storage.button.mute && (
+            <Button shape="circular" icon={<MicOff24Regular />} size="large" />
+          )}
         </div>
         <div className="mid"></div>
         <div className="right">
-          {storage.button.report && <Button
-            shape="circular"
-            icon={<Warning24Regular />}
-            className="btn"
-          />}
-          {storage.button.messages && <Button
-            shape="circular"
-            icon={<Chat24Regular />}
-            onClick={() => setChatOpen(() => !isChatOpen)}
-            className="btn"
-          />}
-          {storage.button.screenSharing && <Button
-            shape="circular"
-            icon={<ShareScreenStart24Regular />}
-            className="btn"
-          />}
-        
-          {(storage.button.messages || storage.button.report) && <Divider vertical />}
+          {storage.button.report && (
+            <Button shape="circular" icon={<Warning24Regular />} size="large" />
+          )}
+          {storage.button.messages && (
+            <Button
+              shape="circular"
+              icon={<Chat24Regular />}
+              onClick={() => setChatOpen(true)}
+              size="large"
+            />
+          )}
+          {storage.button.screenSharing && (
+            <Button
+              shape="circular"
+              icon={<ShareScreenStart24Regular />}
+              size="large"
+            />
+          )}
+
+          {(storage.button.messages || storage.button.report) && (
+            <Divider vertical />
+          )}
           <Button
             shape="circular"
             icon={<ArrowRight24Regular />}
-            className="btn"
+            size="large"
             appearance="primary"
           />
         </div>
       </div>
       <Suspense>
-        {storage.button.messages && <MessagesDrawer open={isChatOpen} setOpen={setChatOpen} />}
+        {storage.button.messages && (
+          <MessagesDrawer open={isChatOpen} setOpen={setChatOpen} />
+        )}
         <SettingsModal open={isSettingsOpen} setOpen={setSettingsOpen} />
       </Suspense>
       {/* 
