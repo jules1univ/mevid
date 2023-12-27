@@ -7,8 +7,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Title1,
-  Title3,
   Card,
   CardHeader,
   Select,
@@ -45,7 +43,12 @@ const SettingSection: FC<SettingSectionProps> = ({ title, content }) => {
   );
 };
 
-const SettingsModal: FC<SettingsModalProps> = ({ open, setOpen }) => {
+const SettingsModal: FC<SettingsModalProps> = ({
+  open,
+  setOpen,
+  storage,
+  setStorage,
+}) => {
   return (
     <Dialog open={open} onOpenChange={(_, { open }) => setOpen(open)}>
       <DialogSurface>
@@ -59,21 +62,57 @@ const SettingsModal: FC<SettingsModalProps> = ({ open, setOpen }) => {
                   <div className="setting-item">
                     <div className="setting-line">
                       <p>Theme</p>
-                      <Select style={{ width: "50%" }}>
-                        <option>Auto</option>
-                        <option>Light</option>
-                        <option>Dark</option>
-                        <option>Hightcontrast</option>
+                      <Select
+                        style={{ width: "50%" }}
+                        onChange={(e) =>
+                          setStorage({
+                            ...storage,
+                            user: {
+                              ...storage.user,
+                              theme: e.target
+                                .value as typeof storage.user.theme,
+                            },
+                          })
+                        }
+                      >
+                        <option value="auto">Auto</option>
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                        <option value="hightcontrast">Hightcontrast</option>
                       </Select>
                     </div>
                     <div className="setting-line">
                       <p>Username</p>
-                      <Input style={{ width: "50%" }} />
+                      <Input
+                        style={{ width: "50%" }}
+                        value={storage.user.username || ""}
+                        onChange={(e) =>
+                          setStorage({
+                            ...storage,
+                            user: {
+                              ...storage.user,
+                              username: e.target.value.trim(),
+                            },
+                          })
+                        }
+                      />
                     </div>
 
                     <div className="setting-line">
                       <p>Avatar (URL)</p>
-                      <Input style={{ width: "50%" }} />
+                      <Input
+                        style={{ width: "50%" }}
+                        value={storage.user.avatarUrl || ""}
+                        onChange={(e) =>
+                          setStorage({
+                            ...storage,
+                            user: {
+                              ...storage.user,
+                              avatarUrl: e.target.value.trim(),
+                            },
+                          })
+                        }
+                      />
                     </div>
                   </div>
                 </>
@@ -86,30 +125,96 @@ const SettingsModal: FC<SettingsModalProps> = ({ open, setOpen }) => {
                   <div className="setting-item">
                     <div className="setting-line">
                       <p>Messages</p>
-                      <Switch />
+                      <Switch
+                        defaultChecked={storage.button.messages}
+                        onChange={(e) =>
+                          setStorage({
+                            ...storage,
+                            button: {
+                              ...storage.button,
+                              messages: e.target.checked,
+                            },
+                          })
+                        }
+                      />
                     </div>
                     <div className="setting-line">
                       <p>Report</p>
-                      <Switch />
+                      <Switch
+                        defaultChecked={storage.button.report}
+                        onChange={(e) =>
+                          setStorage({
+                            ...storage,
+                            button: {
+                              ...storage.button,
+                              report: e.target.checked,
+                            },
+                          })
+                        }
+                      />
                     </div>
 
                     <div className="setting-line">
                       <p>Screen Sharing</p>
-                      <Switch />
+                      <Switch
+                        defaultChecked={storage.button.screenSharing}
+                        onChange={(e) =>
+                          setStorage({
+                            ...storage,
+                            button: {
+                              ...storage.button,
+                              screenSharing: e.target.checked,
+                            },
+                          })
+                        }
+                      />
                     </div>
                     <Divider style={{ margin: "20px 0px" }}>Left side</Divider>
 
                     <div className="setting-line">
                       <p>Mute</p>
-                      <Switch />
+                      <Switch
+                        defaultChecked={storage.button.mute}
+                        onChange={(e) =>
+                          setStorage({
+                            ...storage,
+                            button: {
+                              ...storage.button,
+                              mute: e.target.checked,
+                            },
+                          })
+                        }
+                      />
                     </div>
                     <div className="setting-line">
                       <p>Pause</p>
-                      <Switch />
+                      <Switch
+                        defaultChecked={storage.button.pause}
+                        onChange={(e) =>
+                          setStorage({
+                            ...storage,
+                            button: {
+                              ...storage.button,
+                              pause: e.target.checked,
+                            },
+                          })
+                        }
+                      />
                     </div>
                     <div className="setting-line">
                       <p>Close</p>
-                      <Switch />
+                      <Switch
+                        defaultChecked={storage.button.fastClose}
+                        onChange={(e) =>
+                          setStorage({
+                            ...storage,
+                            button: {
+                              ...storage.button,
+                              fastClose: e.target.checked,
+                            },
+                          })
+                        }
+                      />
                     </div>
                   </div>
                 </>
@@ -192,11 +297,10 @@ const SettingsModal: FC<SettingsModalProps> = ({ open, setOpen }) => {
           </DialogContent>
           <DialogActions>
             <DialogTrigger disableButtonEnhancement>
-              <Button appearance="secondary">Close</Button>
+              <Button appearance="primary" icon={<Save24Regular />}>
+                Save & Close
+              </Button>
             </DialogTrigger>
-            <Button appearance="primary" icon={<Save24Regular />}>
-              Save
-            </Button>
           </DialogActions>
         </DialogBody>
       </DialogSurface>
