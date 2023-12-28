@@ -35,6 +35,8 @@ type RTCSettings = {
   redordingDuration: number;
 
   bannedIPs: string[];
+
+  fullVideoWidth: boolean;
 };
 
 type UserPreferences = {
@@ -63,6 +65,7 @@ export const DEFAULT_STORAGE: UserStorage = {
     report: true,
   },
   rtc: {
+    fullVideoWidth: true,
     audioInput: null,
     audioOutput: null,
     videoInput: null,

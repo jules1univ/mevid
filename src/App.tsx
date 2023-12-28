@@ -8,7 +8,7 @@ import {
   teamsLightTheme,
   teamsHighContrastTheme,
 } from "@fluentui/react-components";
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useCallback, useMemo, useRef, useState } from "react";
 import { useStorage } from "./hooks/useStorage";
 
 import "./index.scss";
@@ -16,8 +16,11 @@ import {
   ArrowRight24Regular,
   Chat24Regular,
   Dismiss24Filled,
+  Mic24Regular,
   MicOff24Regular,
+  Open24Regular,
   Pause24Regular,
+  Play24Regular,
   Settings24Regular,
   ShareScreenStart24Regular,
   Warning24Regular,
@@ -34,7 +37,12 @@ const App = () => {
   );
   const [isChatOpen, setChatOpen] = useState<boolean>(false);
   const [isSettingsOpen, setSettingsOpen] = useState<boolean>(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  const [isPaused, setPaused] = useState<boolean>(false);
+  const [isMuted, setMuted] = useState<boolean>(false);
+  const [isActive, setActive] = useState<boolean>(false);
+
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const theme: Theme = useMemo(() => {
     switch (storage.user.theme) {
@@ -49,24 +57,25 @@ const App = () => {
     }
   }, [storage]);
 
-  useEffect(() => {
-    navigator.mediaDevices
-      .getUserMedia({
-        video: {
-          deviceId: storage.rtc.videoInput || undefined
-        },
-        audio: {
-          deviceId: storage.rtc.audioInput || undefined
-        },
-      })
-      .then((stream) => {
-        if (videoRef.current !== null) {
-          videoRef.current.srcObject = stream;
-        }
-      }).catch(() => {
-        
-      })
-  }, [storage]);
+  const activeVideo = useCallback(() => {
+    if (localVideoRef.current !== null) {
+      navigator.mediaDevices
+        .getUserMedia({
+          video: {
+            deviceId: storage.rtc.videoInput || undefined,
+          },
+          audio: {
+            deviceId: storage.rtc.audioInput || undefined,
+          },
+        })
+        .then((stream) => {
+          if (localVideoRef.current !== null) {
+            localVideoRef.current.srcObject = stream;
+            setActive(true);
+          }
+        });
+    }
+  }, [localVideoRef, storage, setActive]);
 
   return (
     <FluentProvider theme={theme} className="container">
@@ -78,7 +87,16 @@ const App = () => {
       >
         <div className="view-group">
           <div className="video">
-            <video ref={videoRef} autoPlay playsInline></video>
+            <video
+              ref={localVideoRef}
+              autoPlay
+              playsInline
+              style={{
+                width: storage.rtc.fullVideoWidth ? "100%" : "auto",
+                height: !storage.rtc.fullVideoWidth ? "100%" : "auto",
+                opacity: isPaused ? 0.5 : 1,
+              }}
+            />
           </div>
           <div className="video"></div>
         </div>
@@ -102,13 +120,59 @@ const App = () => {
             storage.button.pause ||
             storage.button.mute) && <Divider vertical />}
           {storage.button.fastClose && (
-            <Button shape="circular" icon={<Dismiss24Filled />} size="large" />
+            <Button
+              shape="circular"
+              icon={isActive ? <Dismiss24Filled /> : <Open24Regular />}
+              size="large"
+              onClick={() => {
+                if (
+                  localVideoRef.current !== null &&
+                  localVideoRef.current.srcObject !== null
+                ) {
+                  let stream = localVideoRef.current.srcObject as MediaStream;
+                  stream.getTracks().forEach((track) => {
+                    track.stop();
+                  });
+                  localVideoRef.current.srcObject = null;
+                  if (isPaused) {
+                    setPaused(false);
+                  }
+                  setActive(false);
+                } else {
+                  activeVideo();
+                }
+              }}
+            />
           )}
-          {storage.button.pause && (
-            <Button shape="circular" icon={<Pause24Regular />} size="large" />
+          {storage.button.pause && isActive && (
+            <Button
+              shape="circular"
+              icon={isPaused ? <Play24Regular /> : <Pause24Regular />}
+              size="large"
+              onClick={() => {
+                if (localVideoRef.current !== null) {
+                  if (isPaused) {
+                    localVideoRef.current.play();
+                  } else {
+                    localVideoRef.current.pause();
+                  }
+                  setPaused(() => !isPaused);
+                }
+              }}
+            />
           )}
-          {storage.button.mute && (
-            <Button shape="circular" icon={<MicOff24Regular />} size="large" />
+          {storage.button.mute && isActive && (
+            <Button
+              shape="circular"
+              icon={isMuted ? <MicOff24Regular /> : <Mic24Regular />}
+              size="large"
+              onClick={() => {
+                if (localVideoRef.current !== null) {
+                  localVideoRef.current.muted = !localVideoRef.current.muted;
+                  setMuted(!isMuted);
+                }
+              }}
+            />
           )}
         </div>
         <div className="mid"></div>
@@ -156,6 +220,7 @@ const App = () => {
           setOpen={setSettingsOpen}
           storage={storage}
           setStorage={setStorage}
+          activeVideo={activeVideo}
         />
       </Suspense>
     </FluentProvider>

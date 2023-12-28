@@ -28,6 +28,8 @@ type SettingsModalProps = {
 
   storage: UserStorage;
   setStorage: (newStorage: UserStorage) => void;
+
+  activeVideo: () => void;
 };
 
 type SettingSectionProps = {
@@ -60,6 +62,8 @@ const SettingsModal: FC<SettingsModalProps> = ({
   setOpen,
   storage,
   setStorage,
+
+  activeVideo,
 }) => {
   const [devices, setDevices] = useState<Devices>({
     audioIn: [],
@@ -138,6 +142,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
           <DialogTitle>Settings</DialogTitle>
           <DialogContent className="setting-content">
             <SettingSection
+              key={0}
               title="Preferences"
               content={
                 <>
@@ -162,10 +167,10 @@ const SettingsModal: FC<SettingsModalProps> = ({
                           }
                           className="maxw"
                         >
-                          <option>Auto</option>
-                          <option>Light</option>
-                          <option>Dark</option>
-                          <option>Hightcontrast</option>
+                          <option key={0}>Auto</option>
+                          <option key={1}>Light</option>
+                          <option key={2}>Dark</option>
+                          <option key={3}>Hightcontrast</option>
                         </Select>
                       </div>
                     </div>
@@ -211,6 +216,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
               }
             />
             <SettingSection
+              key={1}
               title="Action Bar"
               content={
                 <>
@@ -325,6 +331,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
               }
             />
             <SettingSection
+              key={2}
               title="Messages"
               content={
                 <>
@@ -398,17 +405,35 @@ const SettingsModal: FC<SettingsModalProps> = ({
               }
             />
             <SettingSection
+              key={3}
               title="Video"
               content={
                 <>
                   <div className="setting-item">
+                    <div className="setting-line">
+                      <p>Display format (Width/Height)</p>
+                      <div className="second">
+                        <Switch
+                          defaultChecked={storage.rtc.fullVideoWidth}
+                          onChange={(e) =>
+                            setStorage({
+                              ...storage,
+                              rtc: {
+                                ...storage.rtc,
+                                fullVideoWidth: e.target.checked,
+                              },
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
                     <div className="setting-line">
                       <p>Video (Input)</p>
                       <div className="second">
                         <Select
                           disabled={devices.error}
                           className="maxw"
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setStorage({
                               ...storage,
                               rtc: {
@@ -416,11 +441,14 @@ const SettingsModal: FC<SettingsModalProps> = ({
                                 videoInput:
                                   devices.videoIn[e.target.selectedIndex].id,
                               },
-                            })
-                          }
+                            });
+                            activeVideo();
+                          }}
                         >
                           {devices.videoIn.map((item) => (
-                            <option key={item.id}>{item.name}</option>
+                            <option key={item.id + "video-in"}>
+                              {item.name}
+                            </option>
                           ))}
                         </Select>
                       </div>
@@ -431,7 +459,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
                         <Select
                           disabled={devices.error}
                           className="maxw"
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setStorage({
                               ...storage,
                               rtc: {
@@ -439,11 +467,14 @@ const SettingsModal: FC<SettingsModalProps> = ({
                                 audioInput:
                                   devices.audioIn[e.target.selectedIndex].id,
                               },
-                            })
-                          }
+                            });
+                            activeVideo();
+                          }}
                         >
                           {devices.audioIn.map((item) => (
-                            <option key={item.id}>{item.name}</option>
+                            <option key={item.id + "audio-in"}>
+                              {item.name}
+                            </option>
                           ))}
                         </Select>
                       </div>
@@ -454,7 +485,7 @@ const SettingsModal: FC<SettingsModalProps> = ({
                         <Select
                           disabled={devices.error}
                           className="maxw"
-                          onChange={(e) =>
+                          onChange={(e) => {
                             setStorage({
                               ...storage,
                               rtc: {
@@ -462,11 +493,14 @@ const SettingsModal: FC<SettingsModalProps> = ({
                                 audioOutput:
                                   devices.audioOut[e.target.selectedIndex].id,
                               },
-                            })
-                          }
+                            });
+                            activeVideo();
+                          }}
                         >
                           {devices.audioOut.map((item) => (
-                            <option key={item.id}>{item.name}</option>
+                            <option key={item.id + "-audio-out"}>
+                              {item.name}
+                            </option>
                           ))}
                         </Select>
                       </div>
@@ -476,8 +510,8 @@ const SettingsModal: FC<SettingsModalProps> = ({
                       <p>Video Codec</p>
                       <div className="second">
                         <Select className="maxw">
-                          {codecs.video.map((item) => (
-                            <option key={item}>{item}</option>
+                          {codecs.video.map((item, index) => (
+                            <option key={index + "-video"}>{item}</option>
                           ))}
                         </Select>
                       </div>
@@ -486,8 +520,8 @@ const SettingsModal: FC<SettingsModalProps> = ({
                       <p>Audio Codec</p>
                       <div className="second">
                         <Select className="maxw">
-                          {codecs.audio.map((item) => (
-                            <option key={item}>{item}</option>
+                          {codecs.audio.map((item, index) => (
+                            <option key={index + "-audio"}>{item}</option>
                           ))}
                         </Select>
                       </div>

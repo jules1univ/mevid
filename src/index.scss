@@ -42,14 +42,13 @@ body {
       top: 50%;
       border-radius: 10px;
       transform: translateY(-50%);
-
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
       .video {
         width: 50%;
-        height: 600px;
+        height: 100%;
+
         background: black;
         display: flex;
         align-items: center;
@@ -57,6 +56,8 @@ body {
         overflow: hidden;
 
         video {
+          transition: all 400ms ease-in-out;
+ 
           width: 100%;
           filter: blur(50px);
           animation: revealBlur 2s ease-in-out 100ms forwards;

@@ -1,6 +1,9 @@
 import { useState, useCallback } from "react";
 
 const hasSameStructure = (obj1: any, obj2: any): boolean => {
+  if (obj1 === null && obj2 == null) {
+    return true;
+  }
   if (typeof obj1 !== "object" || typeof obj2 !== "object") {
     return false;
   }
@@ -13,7 +16,7 @@ const hasSameStructure = (obj1: any, obj2: any): boolean => {
   }
 
   for (const key of keys1) {
-    if (!keys2.includes(key) || typeof obj1[key] !== typeof obj2[key]) {
+    if (!keys2.includes(key)) {
       return false;
     }
 
@@ -24,11 +27,10 @@ const hasSameStructure = (obj1: any, obj2: any): boolean => {
       return false;
     }
   }
-
   return true;
 };
 
-const getStorageValue = <T extends object,>(key: string, defaultValue: T): T => {
+const getStorageValue = <T extends object>(key: string, defaultValue: T): T => {
   try {
     const rawData = localStorage.getItem(key);
     if (rawData === null) {
@@ -48,11 +50,11 @@ const getStorageValue = <T extends object,>(key: string, defaultValue: T): T => 
   }
 };
 
-export const useStorage = <T extends object,>(
+export const useStorage = <T extends object>(
   key: string,
   defaultValue: T
 ): [T, (newValue: T) => void] => {
-  const [value, setValue] = useState(() => {
+  const [value, setValue] = useState<T>(() => {
     return getStorageValue(key, defaultValue);
   });
 
