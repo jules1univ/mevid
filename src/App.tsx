@@ -8,7 +8,7 @@ import {
   teamsLightTheme,
   teamsHighContrastTheme,
 } from "@fluentui/react-components";
-import { Suspense, lazy, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { useStorage } from "./hooks/useStorage";
 
 import "./index.scss";
@@ -24,7 +24,6 @@ import {
 } from "@fluentui/react-icons";
 import { DEFAULT_STORAGE, UserStorage } from "./storage.user";
 
-
 const MessagesDrawer = lazy(() => import("./components/Messages"));
 const SettingsModal = lazy(() => import("./components/Settings"));
 
@@ -35,12 +34,12 @@ const App = () => {
   );
   const [isChatOpen, setChatOpen] = useState<boolean>(false);
   const [isSettingsOpen, setSettingsOpen] = useState<boolean>(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const theme: Theme = useMemo(() => {
-    switch(storage.user.theme)
-    {
+    switch (storage.user.theme) {
       case "auto":
-        return (new Date().getHours() >= 18 ? teamsDarkTheme : teamsLightTheme);
+        return new Date().getHours() >= 18 ? teamsDarkTheme : teamsLightTheme;
       case "dark":
         return teamsDarkTheme;
       case "light":
@@ -48,6 +47,25 @@ const App = () => {
       case "hightcontrast":
         return teamsHighContrastTheme;
     }
+  }, [storage]);
+
+  useEffect(() => {
+    navigator.mediaDevices
+      .getUserMedia({
+        video: {
+          deviceId: storage.rtc.videoInput || undefined
+        },
+        audio: {
+          deviceId: storage.rtc.audioInput || undefined
+        },
+      })
+      .then((stream) => {
+        if (videoRef.current !== null) {
+          videoRef.current.srcObject = stream;
+        }
+      }).catch(() => {
+        
+      })
   }, [storage]);
 
   return (
@@ -59,7 +77,9 @@ const App = () => {
         }}
       >
         <div className="view-group">
-          <div className="video"></div>
+          <div className="video">
+            <video ref={videoRef} autoPlay playsInline></video>
+          </div>
           <div className="video"></div>
         </div>
       </div>
@@ -125,50 +145,19 @@ const App = () => {
       </div>
       <Suspense>
         {storage.button.messages && (
-          <MessagesDrawer open={isChatOpen} rightSide={storage.message.rightDirection} setOpen={setChatOpen} />
+          <MessagesDrawer
+            open={isChatOpen}
+            rightSide={storage.message.rightDirection}
+            setOpen={setChatOpen}
+          />
         )}
-        <SettingsModal open={isSettingsOpen} setOpen={setSettingsOpen} storage={storage} setStorage={setStorage}  />
+        <SettingsModal
+          open={isSettingsOpen}
+          setOpen={setSettingsOpen}
+          storage={storage}
+          setStorage={setStorage}
+        />
       </Suspense>
-      {/* 
-        |-------------------------------------------------------------------------|
-        |                        |                 |                              |
-        |                        |                 |                              |
-        |   view1 (you)          |  view2 (other)  | + view3 (optional other)     |
-        |                        |                 |                              |
-        |                        |                 |                              |
-        |                        |                 |                              |
-        |----[settings]---------------------------------[report]--[next]--[chat]--|    
-    
-    
-        |---[settings]------------------------|
-             
-             -- Input
-
-             [audio input] -> choices
-             [video input] -> choices
-            
-             -- Output
-
-             [output format] -> choices
-             [bandwidth]     -> size
-             [country]       -> world/(selection)
-             [ban list]       -> list
-
-             -- User display
-
-             [display name] -> name
-             [avatar url]   -> url
-             [mode]         -> 2/3 view
-             [theme]        -> light/dark/auto
-             [lang]         -> choices
-             
-             -- Chat
-
-             [chat enable]   -> yes/no
-             [image preview] -> yes/no
-             [word filter]   -> list
-             ([audio write]   -> yes/no)
-    */}
     </FluentProvider>
   );
 };

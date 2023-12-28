@@ -36,9 +36,9 @@ type SettingSectionProps = {
 };
 
 type Devices = {
-  audioIn: string[];
-  videoIn: string[];
-  audioOut: string[];
+  audioIn: { name: string; id: string }[];
+  videoIn: { name: string; id: string }[];
+  audioOut: { name: string; id: string }[];
   error: boolean;
 };
 
@@ -95,30 +95,31 @@ const SettingsModal: FC<SettingsModalProps> = ({
 
     navigator.mediaDevices
       .enumerateDevices()
-      .then((allDevices) => {
-        const audioInDevices = allDevices
-          .filter((device) => device.kind === "audioinput")
-          .map((audioDevice) =>
-            audioDevice.label.length === 0 ? "Default" : audioDevice.label
-          );
-        const videoInDevices = allDevices
-          .filter((device) => device.kind === "videoinput")
-          .map((videoDevice) =>
-            videoDevice.label.length === 0 ? "Default" : videoDevice.label
-          );
-
-        const audioOutDevices = allDevices
-          .filter((device) => device.kind === "audiooutput")
-          .map((audioOutDevice) =>
-            audioOutDevice.label.length === 0 ? "Default" : audioOutDevice.label
-          );
-
-        setDevices({
-          audioIn: audioInDevices,
-          videoIn: videoInDevices,
-          audioOut: audioOutDevices,
+      .then((devices) => {
+        let devicesCp: Devices = {
+          videoIn: [],
+          audioIn: [],
+          audioOut: [],
           error: false,
+        };
+        devices.forEach((device) => {
+          let item = {
+            name: device.label.length === 0 ? "Default" : device.label,
+            id: device.deviceId,
+          };
+          switch (device.kind) {
+            case "audioinput":
+              devicesCp.audioIn.push(item);
+              break;
+            case "audiooutput":
+              devicesCp.audioOut.push(item);
+              break;
+            case "videoinput":
+              devicesCp.videoIn.push(item);
+              break;
+          }
         });
+        setDevices(devicesCp);
       })
       .catch(() => {
         setDevices({
@@ -404,9 +405,22 @@ const SettingsModal: FC<SettingsModalProps> = ({
                     <div className="setting-line">
                       <p>Video (Input)</p>
                       <div className="second">
-                        <Select disabled={devices.error} className="maxw">
+                        <Select
+                          disabled={devices.error}
+                          className="maxw"
+                          onChange={(e) =>
+                            setStorage({
+                              ...storage,
+                              rtc: {
+                                ...storage.rtc,
+                                videoInput:
+                                  devices.videoIn[e.target.selectedIndex].id,
+                              },
+                            })
+                          }
+                        >
                           {devices.videoIn.map((item) => (
-                            <option key={item}>{item}</option>
+                            <option key={item.id}>{item.name}</option>
                           ))}
                         </Select>
                       </div>
@@ -414,9 +428,22 @@ const SettingsModal: FC<SettingsModalProps> = ({
                     <div className="setting-line">
                       <p>Audio (Input)</p>
                       <div className="second">
-                        <Select disabled={devices.error} className="maxw">
+                        <Select
+                          disabled={devices.error}
+                          className="maxw"
+                          onChange={(e) =>
+                            setStorage({
+                              ...storage,
+                              rtc: {
+                                ...storage.rtc,
+                                audioInput:
+                                  devices.audioIn[e.target.selectedIndex].id,
+                              },
+                            })
+                          }
+                        >
                           {devices.audioIn.map((item) => (
-                            <option key={item}>{item}</option>
+                            <option key={item.id}>{item.name}</option>
                           ))}
                         </Select>
                       </div>
@@ -424,9 +451,22 @@ const SettingsModal: FC<SettingsModalProps> = ({
                     <div className="setting-line">
                       <p>Audio (Output)</p>
                       <div className="second">
-                        <Select disabled={devices.error} className="maxw">
+                        <Select
+                          disabled={devices.error}
+                          className="maxw"
+                          onChange={(e) =>
+                            setStorage({
+                              ...storage,
+                              rtc: {
+                                ...storage.rtc,
+                                audioOutput:
+                                  devices.audioOut[e.target.selectedIndex].id,
+                              },
+                            })
+                          }
+                        >
                           {devices.audioOut.map((item) => (
-                            <option key={item}>{item}</option>
+                            <option key={item.id}>{item.name}</option>
                           ))}
                         </Select>
                       </div>

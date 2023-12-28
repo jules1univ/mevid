@@ -1,3 +1,12 @@
+@keyframes revealBlur {
+  from {
+    filter: blur(50px);
+  }
+  to{
+    filter: blur(0px);
+  }
+}
+
 html,
 body {
   width: 100%;
@@ -42,6 +51,16 @@ body {
         width: 50%;
         height: 600px;
         background: black;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+
+        video {
+          width: 100%;
+          filter: blur(50px);
+          animation: revealBlur 2s ease-in-out 100ms forwards;
+        }
       }
     }
   }
