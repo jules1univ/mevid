@@ -18,7 +18,7 @@ type MessagesSettings = {
   wordFilter: string[];
 };
 
-type RTCSettings = {
+type VideoSettings = {
   // https://webrtc.github.io/samples/src/content/devices/input-output/
   audioInput: string | null;
   audioOutput: string | null;
@@ -45,9 +45,9 @@ type UserPreferences = {
   avatarUrl: string | null;
 };
 
-export type UserStorage = {
+type UserStorage = {
   button: ActionBarButtons;
-  rtc: RTCSettings;
+  video: VideoSettings;
   message: MessagesSettings;
   user: UserPreferences;
 
@@ -55,35 +55,23 @@ export type UserStorage = {
   // video size => https://webrtc.github.io/samples/src/content/getusermedia/resolution/
 };
 
-export const DEFAULT_STORAGE: UserStorage = {
-  button: {
-    screenSharing: false,
-    messages: true,
-    fastClose: false,
-    pause: false,
-    mute: false,
-    report: true,
-  },
-  rtc: {
-    fullVideoWidth: true,
-    audioInput: null,
-    audioOutput: null,
-    videoInput: null,
-    videoCodec: null,
-    audioCodec: null,
-    bandwidth: null,
-    redordingDuration: 30,
-    bannedIPs: [],
-  },
-  message: {
-    fileSending: false,
-    rightDirection: false,
-    imagePreview: true,
-    wordFilter: [],
-  },
-  user: {
-    theme: "auto",
-    username: null,
-    avatarUrl: null,
-  },
+type AppActionKind =
+  | "pause"
+  | "active"
+  | "mute"
+  | "messageModal"
+  | "settingModal";
+
+type AppState = {
+  pause: boolean;
+  active: boolean;
+  mute: boolean;
+
+  messageModal: boolean;
+  settingModal: boolean;
+};
+
+type AppAction = {
+  type: AppActionKind;
+  payload?: boolean;
 };

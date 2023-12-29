@@ -12,11 +12,7 @@ import {
 } from "@fluentui/react-components";
 import { Dismiss24Regular, Send16Regular } from "@fluentui/react-icons";
 import { FC } from "react";
-
-type MessageData = {
-  username: string;
-  content: string;
-};
+import { useUserContext } from "../hooks/useUserContext";
 
 const Message = ({ username, content }: MessageData) => {
   return (
@@ -29,27 +25,22 @@ const Message = ({ username, content }: MessageData) => {
   );
 };
 
-type MessagesDrawerProps = {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  messages?: MessageData[];
-  rightSide: boolean;
-};
-
 const MessagesDrawer: FC<MessagesDrawerProps> = ({
+  state,
   messages,
-  rightSide,
-  open,
-  setOpen,
+  dispatch,
 }) => {
+  const { storage } = useUserContext();
   return (
     <Drawer
       type={"overlay"}
       separator
-      open={open}
+      open={state.messageModal}
       size="small"
-      position={rightSide ? "end" : "start"}
-      onOpenChange={(_, { open }) => setOpen(open)}
+      position={storage.message.rightDirection ? "end" : "start"}
+      onOpenChange={(_, { open }) =>
+        dispatch({ type: "messageModal", payload: open })
+      }
     >
       <DrawerHeader>
         <DrawerHeaderTitle
@@ -58,7 +49,7 @@ const MessagesDrawer: FC<MessagesDrawerProps> = ({
               appearance="subtle"
               aria-label="Close"
               icon={<Dismiss24Regular />}
-              onClick={() => setOpen(false)}
+              onClick={() => dispatch({ type: "messageModal", payload: false })}
             />
           }
         >
