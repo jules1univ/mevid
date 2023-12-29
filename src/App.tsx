@@ -5,7 +5,7 @@ import {
   teamsLightTheme,
   teamsHighContrastTheme,
 } from "@fluentui/react-components";
-import { Suspense, lazy, useMemo } from "react";
+import { MutableRefObject, Suspense, lazy, useCallback, useMemo } from "react";
 import { useStorage } from "./hooks/useStorage";
 import { useAppReducer } from "./hooks/useAppReducer";
 import { DEFAULT_STORAGE, UserContext } from "./hooks/useUserContext";
@@ -39,34 +39,28 @@ const App = () => {
   //     return;
   //   }
 
-  //   navigator.mediaDevices
-  //     .getUserMedia({
-  //       video: {
-  //         deviceId: storage.video.videoInput || undefined,
-  //       },
-  //       audio: {
-  //         deviceId: storage.video.audioInput || undefined,
-  //       },
-  //     })
-  //     .then((stream) => {
-  //       if (localVideoRef.current !== null) {
-  //         localVideoRef.current.srcObject = stream;
-  //         setActive(true);
-  //       }
-  //     });
   // }, [localVideoRef, storage, setActive]);
 
-  // const playVideo = useCallback(
-  //   (video: MutableRefObject<HTMLVideoElement | null>) => {
-  //     if (video.current === null) {
-  //       return;
-  //     }
-
-  //     try {
-  //     } catch {}
-  //   },
-  //   [isActive, setActive]
-  // );
+  const activeLocalVideo = useCallback(
+    (video: MutableRefObject<HTMLVideoElement | null>) => {
+      navigator.mediaDevices
+        .getUserMedia({
+          video: {
+            deviceId: storage.video.videoInput || undefined,
+          },
+          audio: {
+            deviceId: storage.video.audioInput || undefined,
+          },
+        })
+        .then((stream) => {
+          if (video.current === null) {
+            return;
+          }
+          video.current.srcObject = stream;
+        });
+    },
+    [state]
+  );
 
   return (
     <UserContext.Provider value={{ storage, setStorage }}>
